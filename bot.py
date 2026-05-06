@@ -1,43 +1,60 @@
-import telebot
+import logging
 import random
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQueryHandler, filters, ContextTypes
 
-from telebot import types
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
+logger = logging.getLogger(__name__)
 
-# Вставь сюда свой токен от @BotFather
-token = 'YOUR_TOKEN_HERE'
-
-bot = telebot.TeleBot(token)
+TOKEN = 'YOUR_TOKEN_HERE'
 
 jokes = [
     "Почему программисты путают Хеллоуин и Рождество? Потому что Oct 31 == Dec 25!",
-    "Как называется страх длинных слов? Гиппопотомонстросесквипедалиофобия.",
-    "— Почему Python такой популярный? — Потому что он не Java!",
-    "Debugging: being the detective in a crime movie where you are also the murderer.",
-    "Есть только 10 типов людей: те, кто понимает двоичную систему, и те, кто нет."
+    "Как называется страх длинных слов? Гиппопотомонстросесквиппедалиофобия.",
+    "— Почему Python такой популярный? — Потому что он не заставляет тебя писать ; в конце каждой строки!"
 ]
 
-@bot.message_handler(commands=['start'])
-def start(message):
-    markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
-    markup.add('Шутку!', 'Ещё шутку', 'Мем', '/help')
-    bot.send_message(message.chat.id, 'Привет! Я мемный Echo-бот 😂\nНажимай кнопки или просто пиши мне.', reply_markup=markup)
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    keyboard = [
+        [InlineKeyboardButton("Расскажи шутку 😂", callback_data='joke')],
+        [InlineKeyboardButton("Кто я?", callback_data='about')]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    await update.message.reply_text(
+        "Привет! Я мемный бот для теста GitHub pull'ов 🚀\n\nНажми кнопки или просто напиши мне что-нибудь.", 
+        reply_markup=reply_markup
+    )
 
-@bot.message_handler(commands=['joke', 'help'])
-def send_joke(message):
-    joke = random.choice(jokes)
-    bot.send_message(message.chat.id, joke)
-
-@bot.message_handler(func=lambda m: True)
-def echo(message):
-    text = message.text.lower()
+async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
     
-    if 'шутк' in text or 'joke' in text:
-        joke = random.choice(jokes)
-        bot.send_message(message.chat.id, joke)
-    elif text == 'мем':
-        bot.send_message(message.chat.id, 'Мемов пока нет, но вот шутка: ' + random.choice(jokes))
-    else:
-        bot.send_message(message.chat.id, f'Ты написал: {message.text}\nЯ эхо-бот, но иногда шучу 😎')
+    if query.data == 'joke':
+        await query.edit_message_text(text=random.choice(jokes))
+    elif query.data == 'about':
+        await query.edit_message_text(text="Я простой тестовый бот. Создан для проверки скорости git pull с Grok.")
 
-print('Мемный бот запущен...')
-bot.infinity_polling()
+async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    text = update.message.text.lower()
+    if 'привет' in text or 'здарова' in text:
+        await update.message.reply_text("Здарова, братело! 🔥")
+    elif 'как дела' in text:
+        await update.message.reply_text("Нормально, кодю с Grok'ом! А у тебя как?")
+    else:
+        await update.message.reply_text(f"Эхо: {update.message.text}")
+
+async def joke(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(random.choice(jokes))
+
+def main():
+    application = Application.builder().token(TOKEN).build()
+    
+    application.add_handler(CommandHandler("start", start))
+    application.add_handler(CommandHandler("joke", joke))
+    application.add_handler(CallbackQueryHandler(button))
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))
+    
+    application.run_polling(allowed_updates=Update.ALL_TYPES)
+
+if __name__ == '__main__':
+    main()
