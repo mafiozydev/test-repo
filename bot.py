@@ -1,4 +1,6 @@
 import telebot
+import random
+
 from telebot import types
 
 # Вставь сюда свой токен от @BotFather
@@ -6,52 +8,36 @@ token = 'YOUR_TOKEN_HERE'
 
 bot = telebot.TeleBot(token)
 
-# Хранилище для текущего выражения
-user_data = {}
+jokes = [
+    "Почему программисты путают Хеллоуин и Рождество? Потому что Oct 31 == Dec 25!",
+    "Как называется страх длинных слов? Гиппопотомонстросесквипедалиофобия.",
+    "— Почему Python такой популярный? — Потому что он не Java!",
+    "Debugging: being the detective in a crime movie where you are also the murderer.",
+    "Есть только 10 типов людей: те, кто понимает двоичную систему, и те, кто нет."
+]
 
 @bot.message_handler(commands=['start'])
 def start(message):
-    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    markup.row('7', '8', '9', '/')
-    markup.row('4', '5', '6', '*')
-    markup.row('1', '2', '3', '-')
-    markup.row('0', '.', '=', '+')
-    markup.row('C', 'DEL')
-    
-    bot.send_message(message.chat.id, 'Привет! Я калькулятор-бот. Нажимай кнопки или пиши выражение.', reply_markup=markup)
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
+    markup.add('Шутку!', 'Ещё шутку', 'Мем', '/help')
+    bot.send_message(message.chat.id, 'Привет! Я мемный Echo-бот 😂\nНажимай кнопки или просто пиши мне.', reply_markup=markup)
+
+@bot.message_handler(commands=['joke', 'help'])
+def send_joke(message):
+    joke = random.choice(jokes)
+    bot.send_message(message.chat.id, joke)
 
 @bot.message_handler(func=lambda m: True)
-def calculator(message):
-    text = message.text
-    chat_id = message.chat.id
+def echo(message):
+    text = message.text.lower()
     
-    if text == 'C':
-        user_data[chat_id] = ''
-        bot.send_message(chat_id, 'Очищено!')
-        return
-    
-    if text == 'DEL':
-        if chat_id in user_data:
-            user_data[chat_id] = user_data[chat_id][:-1]
-        bot.send_message(chat_id, 'Удалено последний символ')
-        return
-    
-    if text == '=':
-        if chat_id in user_data and user_data[chat_id]:
-            try:
-                result = eval(user_data[chat_id])
-                bot.send_message(chat_id, f'Результат: {result}')
-                user_data[chat_id] = str(result)
-            except:
-                bot.send_message(chat_id, 'Ошибка в выражении!')
-                user_data[chat_id] = ''
-        return
-    
-    # Добавляем символ
-    if chat_id not in user_data:
-        user_data[chat_id] = ''
-    user_data[chat_id] += text
-    bot.send_message(chat_id, f'Текущее выражение: {user_data[chat_id]}')
+    if 'шутк' in text or 'joke' in text:
+        joke = random.choice(jokes)
+        bot.send_message(message.chat.id, joke)
+    elif text == 'мем':
+        bot.send_message(message.chat.id, 'Мемов пока нет, но вот шутка: ' + random.choice(jokes))
+    else:
+        bot.send_message(message.chat.id, f'Ты написал: {message.text}\nЯ эхо-бот, но иногда шучу 😎')
 
-print('Бот запущен...')
+print('Мемный бот запущен...')
 bot.infinity_polling()
