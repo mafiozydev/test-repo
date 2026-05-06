@@ -1,16 +1,15 @@
-# Telegram Calculator Bot
+# Мемный Echo Bot
 
-Простой калькулятор-бот для Telegram.
+Простой Telegram-бот для теста Git pull.
 
-## Как запустить
+## Команды:
+- /start — главное меню
+- /joke — случайная шутка
+- Просто пиши сообщения
 
-1. Установи зависимости:
-   ```bash
-   pip install -r requirements.txt
-   ```
-2. Создай бота у @BotFather и получи токен.
-3. Вставь токен в `bot.py`
-4. Запусти:
-   ```bash
-   python bot.py
-   ```
+## Запуск:
+1. `pip install -r requirements.txt`
+2. Вставь токен в `bot.py`
+3. `python bot.py`
+
+Лёгкий код специально для быстрого тестирования изменений.
